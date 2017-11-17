@@ -1,0 +1,25 @@
+{
+	"manifest_version": 2,
+	"name": "Netcare Data Extraction",
+	"version": "1.0",
+	"description": "Extracts a confidential list lab work and medications from a patient's Netcare profile",
+	"icons": {
+		"48": "icons/icon-48.png"
+	},
+	"permissions": [
+		"activeTab",
+		"notifications",
+		"clipboardWrite"
+	],
+	"content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content_scripts/extraction.js"]
+        }
+    ],
+	"browser_action": {
+		"default_icon": "icons/icon-32.png",
+		"default_title": "Netcare Data Extraction",
+		"default_popup": "popup/choose_extraction.html"
+	}
+}
