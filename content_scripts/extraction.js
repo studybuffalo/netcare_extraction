@@ -11,7 +11,7 @@ function createLi(txt) {
 function receiveMedications(sendResponse) {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_textarea").value;
-
+	medications = document.getElementById("netcare_extraction_div").innerHTML;
     // Remove the veil
     let veil = document.getElementById("netcare_extraction_veil");
     document.body.removeChild(veil);
@@ -106,16 +106,19 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
             + "medications to a certain timeframe."
         ));
         instructionsList.appendChild(createLi(
-            "Make sure to include the 'Allergies' and 'Report End' in "
-            + "the text you copy."
+            "Make sure to copy and paste all the text in the Netcare report "
+			+ "(from patient name to '- End of Report -'"
         ));
         instructions.appendChild(instructionsList);
 
-        // Add a textarea to copy medication list to
-        let textarea = document.createElement("textarea");
-        textarea.id = "netcare_extraction_textarea";
-        content.append(textarea);
-
+        // Add an editable div to collect the copied content
+		// Editable div used to preserve as much HTML content as 
+		// possible to ease data extraction
+		let editableDiv = document.createElement("div");
+		editableDiv.id="netcare_extraction_div";
+		editableDiv.contentEditable = "true";
+		content.append(editableDiv);
+		
         // Add a cancel button
         let cancelButton = document.createElement("input");
         cancelButton.type = "button";
