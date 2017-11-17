@@ -1,59 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html>
 	<head>
 		<meta charset="utf-8">
-		<style>
-			#popup-content {
-				width: 300px;
-			}
-			
-			h1 {
-				width: 1 em;
-			}
-			
-			textarea {
-				display: block;
-				width: 100%;
-			}
-			
-			div {
-				overflow-wrap: normal;
-			}
-			
-			em {
-				display: block;
-			}
-		</style>
+        <style>
+            input[type="button"] {
+                width: 100%;
+            }
+        </style>
 	</head>
 
 	<body>
-		<div id="popup-content">
-			<h1>Extract Lab Work</h1>
-			
-			<em>Click the "Extract lab work" button when you have the proper flow sheet opened for your patient.</em>
-			
-			<input type="button" id="extract-labs" value="Extract lab work">
-			
-			<hr>
-			
-			<h1>Extract Medications</h1>
-			
-			<div>
-				Copy the medication profile text below and hit the 
-				extract button to extract medications. To ensure the 
-				extraction is successful, please do the following:
-				<ul>
-					<li>Use the Medication Profile section, not PIN</li>
-					<li>Change your report to the Detailed Report</li>
-					<li>Set your date range to include all the medications you want to extract</li>
-				</ul>
-			</div>
-			
-			<textarea></textarea>
-			
-			<input type="button" id="extract-medications" value="Extract medications">
-		</div>
+		<div><input type="button" id="extract-labs" value="Extract lab work"></div>
+		<div><input type="button" id="extract-medications" value="Extract medications"></div>
 		
 		<script src="choose_extraction.js"></script>
 	</body>

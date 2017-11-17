@@ -27,7 +27,7 @@ document.getElementById("extract-labs").addEventListener("click", (e) => {
 						output: "json"
 					}
 				).then(response => {
-					console.log("Lab JSON: " + response.lab_json);
+					console.log("Lab JSON: " + response.message);
 					
 					// When appropriate response received, update the popup
 					
@@ -45,5 +45,21 @@ document.getElementById("extract-labs").addEventListener("click", (e) => {
 });
 
 document.getElementById("extract-medications").addEventListener("click", (e) => {
-	console.log("Starting Extract Medications");
+    console.log("Starting Extract Medications");
+    browser.tabs.query({
+        active: true,
+        currentWindow: true
+    }).then((tabs) => {
+        for (let tab of tabs) {
+            browser.tabs.sendMessage(
+                tab.id,
+                {
+                    content: "medications",
+                    output: "json"
+                }
+            ).then(response => {
+                console.log("Medication JSON: " + response.message);
+            }).catch(onError);
+        }
+    });
 });

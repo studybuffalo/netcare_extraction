@@ -1,0 +1,39 @@
+#netcare_extraction_veil {
+    background: rgba(0, 0, 0, 0.25);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+#netcare_extraction_container {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+#netcare_extraction_content {
+    background-color: rgb(240, 240, 240);
+    padding: 25px;
+}
+
+#netcare_extraction_instructions {
+    padding: 10px 0;
+}
+
+    #netcare_extraction_instructions ul {
+        padding-left: 25px;
+    }
+
+#netcare_extraction_textarea {
+    display: block;
+    height: 300px;
+    margin: 10px 0;
+    resize: none;
+    width: 100%;
+}
