@@ -1,4 +1,4 @@
-var browser = browser || chrome;
+﻿var browser = browser || chrome;
 console.log("extraction.js loaded");
 
 function checkForEndOfReport(table) {
@@ -132,42 +132,42 @@ function checkForEndOfReport(table) {
     <table></table>     END OF REPORT - NOT NEEDED
 */
 
+function getChildren(el, tag, multiple) {
+    if (multiple) {
+        let children = el.children;
+        let elArray = [];
+
+        for (child of children) {
+            if (child.tagName === tag.toUpperCase()) {
+                elArray.push(child);
+            }
+        }
+
+        return elArray;
+    } else {
+        let children = el.children;
+
+        for (child of children) {
+            if (child.tagName === tag.toUpperCase()) {
+                return child;
+            }
+        }
+    }
+}
+
 function extractMedications(data) {
     // Get all the direct child tables
     let dataChildren = data.children;
-
-    let tables = [];
+    let tables = getChildren(data, "TABLE", true);
     
-    for (child of dataChildren) {
-        if (child.tagName === "TABLE") {
-            tables.push(child);
-        }
-    }
-
     // Last table in the data contains the medications
     let table = tables[tables.length - 1];
     
     // Get the direct body element
-    let tableChildren = table.children;
-
-    let tbody;
-
-    for (child of tableChildren) {
-        if (child.tagName === "TBODY") {
-            tbody = child;
-        }
-    }
+    let tbody = getChildren(table, "TBODY", false);
 
     // Collect all the direct rows of tbody (these contain the data)
-    tbodyChildren = tbody.children;
-
-    let rows = [];
-
-    for (child of tbodyChildren) {
-        if (child.tagName === "TR") {
-            rows.push(child);
-        }
-    }
+    let rows = getChildren(tbody, "TR", true);
     
     for (row of rows) {
         console.log(row);
@@ -175,6 +175,34 @@ function extractMedications(data) {
     
 }
 
+/* Queries to determine what type of TR this is
+├└
+
+tr > td > table > tbody > tr > td > strong > span       MEDICATION
+│
+└ > td > table > tbody > tr > td > strong > div         PHYSICIAN
+                 |
+                 └ > tr > td                            PHYSICIAN PHONE
+note: there is an errant tr element in this TR element
+
+
+tr > td                                                 DISPENSING DATE
+│
+├ > td > table > tbody > tr > td > strong
+|                |
+|                ├ > tr > td > table > tbody > tr > td  QUANTITY DISPENSED
+|                |                             |
+|                |                             └ > td   DAY SUPPLY
+|                |
+|                └ > tr > td > div                      INSTRUCTIONS
+|
+└ > td > table > tbody > tr > td > strong               DISPENSING PHARMACY
+                 |
+                 └ > tr > td                            PHARMACY PHONE
+
+tr > td > hr                                            DIVIDER BETWEEN GROUPS OF RX
+
+*/
 function receiveMedications(sendResponse) {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_div");
@@ -198,38 +226,16 @@ function receiveMedications(sendResponse) {
         }
 
         // Extract the tbody of the first table to extract medication data
-        let primaryTableChildren = primaryTables[0].children;
-        
-        let primaryBody;
-        for (child of primaryTableChildren) {
-            if (child.tagName === "TBODY") {
-                primaryBody = child;
-            }
-        }
+        let primaryBody = getChildren(primaryTables[0], "TBODY", false);
 
         // Extract the first table row element
-        let primaryBodyChildren = primaryBody.children;
-        let primaryRow;
+        let primaryRow = getChildren(primaryBody, "TR", false);
         
-        for (child of primaryBodyChildren) {
-            if (child.tagName === "TR") {
-                primaryRow = child;
-            }
-        }
-
         // Extract the first table data
-        let primaryRowChildren = primaryRow.children;
-        let primaryCell;
-
-        for (child of primaryRowChildren) {
-            if (child.tagName === "TD") {
-                primaryCell = child;
-            }
-        }
-
+        let primaryCell = getChildren(primaryRow, "TD", false);
+        
         // Pass the table data and extract medications
         medications = extractMedications(primaryCell);
-        
     } else if (primaryTables.length === 1) {
         // Only "End of Report"
         validation = false;
