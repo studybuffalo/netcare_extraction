@@ -16,6 +16,96 @@ function checkForEndOfReport(table) {
 
     return returnValue
 }
+
+function getChildren(el, tag, multiple) {
+    if (multiple) {
+        let children = el.children;
+        let elArray = [];
+
+        for (child of children) {
+            if (child.tagName === tag.toUpperCase()) {
+                elArray.push(child);
+            }
+        }
+
+        return elArray;
+    } else {
+        let children = el.children;
+
+        for (child of children) {
+            if (child.tagName === tag.toUpperCase()) {
+                return child;
+            }
+        }
+    }
+}
+
+function getDataRows(primaryTable) {
+    // Extract the tbody of the first table to extract medication data
+    let primaryBody = getChildren(primaryTable, "TBODY", false);
+
+    // Extract the first table row element
+    let primaryRow = getChildren(primaryBody, "TR", false);
+
+    // Extract the first table data
+    let primaryCell = getChildren(primaryRow, "TD", false);
+
+    // Get all the direct child tables
+    let tables = getChildren(primaryCell, "TABLE", true);
+    
+    // Last table in the data contains the medications
+    let table = tables[tables.length - 1];
+    
+    // Get the direct body element
+    let tbody = getChildren(table, "TBODY", false);
+
+    // Collect all the direct rows of tbody (these contain the data)
+    let rows = getChildren(tbody, "TR", true);
+
+    return rows;
+}
+
+function validateData(dataRows, endOfReport) {
+    let validation;
+    let errors = [];
+    // Test for report start and type
+    anyReport = new RegExp(/CHRONOLOGICAL PRESCRIPTION LIST/, "i");
+    properReport = new RegExp(/CHRONOLOGICAL PRESCRIPTION LIST - Detail/, "i");
+
+    if (anyReport.test(dataRows[0].innerHTML) === false) {
+        validation = false;
+        errors.push("Unable to detect start of report.")
+    } else if (properReport.test(dataRows[0].innerHTML) === false) {
+        // Check that the first row has the proper report caption
+        validation = false;
+        errors.push("Appears incorrect report type used.");
+    }
+
+    // Test for report end
+    if (checkForEndOfReport(endOfReport) === false) {
+        // Check for end of report tag
+        validation = false;
+        errors.push("Cannot detect end of report.");
+    }
+    
+    if (errors.length) {
+        errors.push(
+            "Please ensure correct report type is selected and retry "
+            + "copying and pasting the entire report."
+        )
+
+        return {
+            validation: false,
+            errors: errors.join("<br>")
+        };
+    } else {
+        return {
+            validation: true,
+            errors: ""
+        };
+    }
+}
+
 /*
     Tracking the code to prescription medications
     <table>
@@ -132,77 +222,49 @@ function checkForEndOfReport(table) {
     <table></table>     END OF REPORT - NOT NEEDED
 */
 
-function getChildren(el, tag, multiple) {
-    if (multiple) {
-        let children = el.children;
-        let elArray = [];
-
-        for (child of children) {
-            if (child.tagName === tag.toUpperCase()) {
-                elArray.push(child);
-            }
-        }
-
-        return elArray;
-    } else {
-        let children = el.children;
-
-        for (child of children) {
-            if (child.tagName === tag.toUpperCase()) {
-                return child;
-            }
-        }
-    }
-}
-
-function extractMedications(data) {
-    // Get all the direct child tables
-    let dataChildren = data.children;
-    let tables = getChildren(data, "TABLE", true);
-    
-    // Last table in the data contains the medications
-    let table = tables[tables.length - 1];
-    
-    // Get the direct body element
-    let tbody = getChildren(table, "TBODY", false);
-
-    // Collect all the direct rows of tbody (these contain the data)
-    let rows = getChildren(tbody, "TR", true);
-    
-    for (row of rows) {
-        console.log(row);
-    }
-    
-}
-
 /* Queries to determine what type of TR this is
-├└
+tr > td > span                                                  REPORT TITLE x 1 total as first tr
 
-tr > td > table > tbody > tr > td > strong > span       MEDICATION
+tr > td > table > tbody > tr > td > strong > span               MEDICATION                  Start of a new medication
 │
-└ > td > table > tbody > tr > td > strong > div         PHYSICIAN
-                 |
-                 └ > tr > td                            PHYSICIAN PHONE
+└─ > td > table > tbody > tr > td > strong > div                PHYSICIAN
+                  |
+                  └──── > tr > td                               PHYSICIAN PHONE
 note: there is an errant tr element in this TR element
 
+tr > td > img                                                   "spacer" (no data)          Always follows the above tr?
 
-tr > td                                                 DISPENSING DATE
+tr > td                                                         &nbsp;                      Always follows the above tr?
 │
-├ > td > table > tbody > tr > td > strong
-|                |
-|                ├ > tr > td > table > tbody > tr > td  QUANTITY DISPENSED
-|                |                             |
-|                |                             └ > td   DAY SUPPLY
-|                |
-|                └ > tr > td > div                      INSTRUCTIONS
-|
-└ > td > table > tbody > tr > td > strong               DISPENSING PHARMACY
-                 |
-                 └ > tr > td                            PHARMACY PHONE
+├─ > td > table > tbody > tr > td                               "Dispenses" + img "spacer"  
+│
+└─ > td                                                         &nbsp;
 
-tr > td > hr                                            DIVIDER BETWEEN GROUPS OF RX
+tr > td                                                         DISPENSING DATE             First always follows above tr?
+│                                                                                           Multiple (one per each dispense)
+├─ > td > table > tbody > tr > td > strong
+|                |
+|                ├───── > tr > td > table > tbody > tr > td     QUANTITY DISPENSED
+|                |                          |
+|                |                          └──── > td          DAY SUPPLY
+|                |
+|                └───── > tr > td > div                         INSTRUCTIONS
+|
+└─ > td > table > tbody > tr > td > strong                      DISPENSING PHARMACY
+                  |
+                  └──── > tr > td                               PHARMACY PHONE
+
+tr > td > hr                                                    DIVIDER BETWEEN RX GROUPS   Always at end of dispensing information?
+
+tr > td > img                                                   "spacer" (no data)          Always follows the divider?
 
 */
+
+function extractMedicationData(rows) {
+    console.log("Starting Data Extraction on Data Rows");
+
+    return "";
+}
 function receiveMedications(sendResponse) {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_div");
@@ -211,54 +273,51 @@ function receiveMedications(sendResponse) {
     let validation = true;
     let errorMessage = "";
 
-    // Get all the children of medications
+    // Extract the require DOM elements to extract data
     let primaryTables = document.querySelectorAll("#netcare_extraction_div > table");
-    
+    let dataRows;
+
     // Check how many tables there are (2 is expected)
     if (primaryTables.length === 2) {
-        // 2 Tables = Content + "End of Report"
-        // Check for end of report tag
-        if (checkForEndOfReport(primaryTables[1]) === false) {
-            validation = false;
-            errorMessage =
-                "Cannot detect end of report - please retry copying and pasting "
-                + "the entire medication profile report";
-        }
-
-        // Extract the tbody of the first table to extract medication data
-        let primaryBody = getChildren(primaryTables[0], "TBODY", false);
-
-        // Extract the first table row element
-        let primaryRow = getChildren(primaryBody, "TR", false);
+        dataRows = getDataRows(primaryTables[0]);
         
-        // Extract the first table data
-        let primaryCell = getChildren(primaryRow, "TD", false);
-        
-        // Pass the table data and extract medications
-        medications = extractMedications(primaryCell);
+        let validationResults = validateData(dataRows, primaryTables[1]);
+
+        validation = validationResults.validation;
+        errorMessage = validationResults.errors;
     } else if (primaryTables.length === 1) {
+        // TODO: analyze reports to see if this situation ever occurs
+
         // Only "End of Report"
         validation = false;
+
+        errorMessage =
+            "Cannot extract data from copied text.<br>"
+            + "Please ensure correct report type is selected and retry "
+            + "copying and pasting the entire report.";
     } else {
         validation = false;
+
+        errorMessage =
+            "Cannot extract data from copied text.<br>"
+            + "Please ensure correct report type is selected and retry "
+            + "copying and pasting the entire report.";
     }
 
     if (validation) {
+        // Use the dataRows to extract the medication data
+        let medicationData = extractMedicationData(dataRows);
+
         // Remove the veil
         let veil = document.getElementById("netcare_extraction_veil");
         document.body.removeChild(veil);
 
         // Send the response back to the extension
-        sendResponse({ message: medications.innerHTML });
+        sendResponse({ message: medicationData });
     } else {
         // Clear the editableDiv
         medications.innerHTML = "";
-
-        // Send error message to user
-        errorMessage =
-            "Cannot extract medications from pasted text, "
-            + "please retry copying and pasting text";
-
+        
         let errorDiv = document.getElementById("netcare_extraction_errors");
         errorDiv.innerHTML = errorMessage;
     }
