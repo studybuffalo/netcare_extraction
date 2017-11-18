@@ -1,5 +1,4 @@
 ﻿var browser = browser || chrome;
-console.log("extraction.js loaded");
 
 function checkForEndOfReport(table) {
     let returnValue = false;
@@ -242,13 +241,13 @@ tr > td                                                         &nbsp;          
 
 tr > td                                                         DISPENSING DATE             First always follows above tr?
 │                                                                                           Multiple (one per each dispense)
-├─ > td > table > tbody > tr > td > strong
-|                |
-|                ├───── > tr > td > table > tbody > tr > td     QUANTITY DISPENSED
-|                |                          |
-|                |                          └──── > td          DAY SUPPLY
-|                |
-|                └───── > tr > td > div                         INSTRUCTIONS
+├─ > td > table > tbody > tr > td > strong                      TRADE NAME
+|                 |
+|                 ├──── > tr > td > table > tbody > tr > td     QUANTITY DISPENSED
+|                 |                         |
+|                 |                         └──── > td          DAY SUPPLY
+|                 |
+|                 └───── > tr > td > div                        INSTRUCTIONS
 |
 └─ > td > table > tbody > tr > td > strong                      DISPENSING PHARMACY
                   |
@@ -261,8 +260,97 @@ tr > td > img                                                   "spacer" (no dat
 */
 
 function extractMedicationData(rows) {
-    console.log("Starting Data Extraction on Data Rows");
+    // Step 1: Cycle through rows and arrange medication groups
+    // Step 2: Can use the MEDICATION tree for identification
+    // Step 3: Can use the QUANTITY DISPENSED tree for identification
 
+
+    // Identify all the divider rows
+    let dividerIndex = [];
+    let rowLength = rows.length;
+
+    for (let i = 0; i < rowLength; i++) {
+        if (rows[i].querySelector("td > hr")) {
+            dividerIndex.push(i);
+        }
+    }
+
+    // Split the rows into groups based on the dividers
+    let groups = [];
+    let startIndex = 0;
+
+    for (index of dividerIndex) {
+        // Slice the array group out
+        groups.push(rows.slice(startIndex, index));
+
+        // Update the start index for the next loop
+        startIndex = index + 1;
+    }
+    
+    // Go through each group and extract data
+    let medicationData = [];
+
+    for (group of groups) {
+        let medication = {
+            name: "",
+            dispenses: []
+        }
+
+        for (row of group) {
+            let medicationNameRow = row.querySelector(
+                ":scope td > table > tbody > tr > td > strong > span"
+            );
+            let quantityDispensedRow = row.querySelector(
+                ":scope td > table > tbody > tr > td > table > tbody > tr > td"
+            );
+            
+            if (medicationNameRow) {
+                medication.name = medicationNameRow.innerText.trim();
+            } else if (quantityDispensedRow) {
+                let dispenseData = {
+                    trade_name: "",
+                    quantity: "",
+                    day_supply: "",
+                    sig: ""
+                }
+
+                // Extract the trade name data
+                let tradeName = row.querySelector(
+                    ":scope td > table > tbody > tr > td > strong"
+                );
+
+                if (tradeName) {
+                    dispenseData.trade_name = tradeName.innerText.trim();
+                }
+                
+                // Extract the quantity and day supply data
+                let quantitySupply = row.querySelectorAll(
+                    ":scope td > table > tbody > tr > td > table > tbody > tr > td"
+                );
+                
+                if (quantitySupply.length) {
+                    dispenseData.quantity = quantitySupply[0].innerText.trim();
+                    dispenseData.day_supply = quantitySupply[1].innerText.trim();
+                }
+                
+                // Extract the instruction data
+                let instructions = row.querySelector(
+                    ":scope td > table > tbody > tr > td > div"
+                );
+
+                if (instructions) {
+                    dispenseData.sig = instructions.innerText.trim();
+                }
+                
+                // Add the dispensing data
+                medication.dispenses.push(dispenseData);
+            }
+        }
+
+        medicationData.push(medication);
+    }
+
+    console.log(medicationData);
     return "";
 }
 function receiveMedications(sendResponse) {
@@ -347,9 +435,6 @@ function createLi(txt) {
 }
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("Message Received");
-    console.log(request);
-
     let extractionType = request ? request.content.toUpperCase() : null;
 
     if (extractionType === "LABS") {
@@ -369,8 +454,6 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         sendResponse({ message: "lab values extracted" });
     } else if (extractionType === "MEDICATIONS") {
-        console.log("Message received to start medication extraction");
-
         let body = document.body;
 
         // Add the screen veil to detect any clicks
