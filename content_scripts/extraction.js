@@ -351,8 +351,10 @@ function extractMedicationData(rows) {
     }
 
     console.log(medicationData);
-    return "";
+
+    return JSON.stringify(medicationData);
 }
+
 function receiveMedications(sendResponse) {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_div");

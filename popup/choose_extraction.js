@@ -10,6 +10,21 @@ function handleResponse(response) {
 	console.log(response.farewell);
 }
 
+function copyResult(msg) {
+    // Create element
+    let responseInput = document.createElement("input");
+    responseInput.type = "text";
+    responseInput.value = msg;
+
+    // Add the element to the body and copy the text
+    document.body.appendChild(responseInput);
+    responseInput.select();
+    document.execCommand("Copy");
+
+    // Remove the element
+    document.body.removeChild(responseInput);
+}
+
 document.getElementById("extract-labs").addEventListener("click", (e) => {
 	console.log("Starting Lab Extraction");
 	browser.tabs.query({
@@ -58,7 +73,10 @@ document.getElementById("extract-medications").addEventListener("click", (e) => 
                     output: "json"
                 }
             ).then(response => {
-                console.log("Medication JSON: " + response.message);
+                let message = response.message;
+                console.log("Medication JSON: " + message);
+
+                copyResult(message);
             }).catch(onError);
         }
     });
