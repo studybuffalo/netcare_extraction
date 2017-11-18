@@ -8,6 +8,121 @@ function createLi(txt) {
     return li;
 }
 
+/*
+    Tracking the code to prescription medications
+    <table>
+        <thead></thead>     NOT NEEDED
+        <tbody>             MEDICATIONS IN HERE
+            <tr>
+                <td>
+                    <table></table>     ALLERGIES - NOT NEEDED
+                    <table>
+                        <tbody>
+                            <tr></tr> - FIRST TR = CAPTION - NOT NEEDED
+
+                            ...
+                            <tr>            PIN PRESCRIPTION
+                                <td>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        <span>
+                                                            DRUG NAME STRENGTH DOSAGE FORM (GENERIC)
+                                                        </span>
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            <tr>        ERRANT TR HERE (will this screw up DOM traversal?)
+                                            <tr></tr>           APPEARS BLANK?
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr></tr>           EMPTY LINE (appears intentional design)
+                            <tr>                LABEL TEXT FOR "Dispenses:"
+                                <td></td>       EMPTY
+                                <td>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>Dispenses:</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td></td>       EMPTY
+                            </tr>
+                            <tr>                DISPENSING INFORMATION
+                                <td></td>           EMPTY
+                                <td>DISPENSE DATE</td>
+                                <td>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        DRUG NAME STRENGTH DOSAGE FORM
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <table>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>QUANTITY</td>
+                                                            <td>DAY SUPPLY</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div>
+                                                        INSTRUCTIONS
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        DISPENSING PHARMACY
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>PHARMACY PHONE NUMBER</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            ...
+                            ABOVE TR element repeats for each dispense
+                            ...
+                            <tr>        HR ELEMENT AT THE END OF THE MEDICATION
+                                <td>
+                                    <hr>
+                                <td>
+                            </tr>
+                            ...
+                            ABOVE SEQUENCE OF TR ELEMENTS REPEATS FOR EACH MEDICATION
+                            ...
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table></table>     END OF REPORT - NOT NEEDED
+*/
 function receiveMedications(sendResponse) {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_div");
