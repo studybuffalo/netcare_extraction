@@ -10,14 +10,36 @@ function createLi(txt) {
 
 function receiveMedications(sendResponse) {
     // Get the medication content
-    let medications = document.getElementById("netcare_extraction_textarea").value;
+    let medications = document.getElementById("netcare_extraction_div");
 
-    // Remove the veil
-    let veil = document.getElementById("netcare_extraction_veil");
-    document.body.removeChild(veil);
+    // Check if the require content is present, otherwise display warning
+    let validation = false;
+    let tables = medications.getElementsByTagName("table");
+    console.log(tables.length);
 
-    // Send the response back to the extension
-    sendResponse({ message: medications });
+    for (table of tables) {
+        console.log(table.innerHTML);
+    }
+
+    if (validation) {
+        // Remove the veil
+        let veil = document.getElementById("netcare_extraction_veil");
+        document.body.removeChild(veil);
+
+        // Send the response back to the extension
+        sendResponse({ message: medications.innerHTML });
+    } else {
+        // Clear the editableDiv
+        medications.innerHTML = "";
+
+        // Send error message to user
+        errorMessage =
+            "Cannot extract medications from pasted text, "
+            + "please retry copying and pasting text";
+
+        let errorDiv = document.getElementById("netcare_extraction_errors");
+        errorDiv.innerHTML = errorMessage;
+    }
 }
 
 function cancelExtraction(e, sendResponse) {
@@ -106,15 +128,23 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
             + "medications to a certain timeframe."
         ));
         instructionsList.appendChild(createLi(
-            "Make sure to include the 'Allergies' and 'Report End' in "
-            + "the text you copy."
+            "Make sure to copy and paste all the text in the Netcare report "
+            + "(from patient name to '- End of Report -'"
         ));
         instructions.appendChild(instructionsList);
 
-        // Add a textarea to copy medication list to
-        let textarea = document.createElement("textarea");
-        textarea.id = "netcare_extraction_textarea";
-        content.append(textarea);
+        // Add a div to hold any error messages
+        let errors = document.createElement("div");
+        errors.id = "netcare_extraction_errors";
+        content.appendChild(errors);
+
+        // Add an editable div to collect the copied content
+        // Editable div used to preserve as much HTML content as 
+        // possible to ease data extraction
+        let editableDiv = document.createElement("div");
+        editableDiv.id = "netcare_extraction_div";
+        editableDiv.contentEditable = "true";
+        content.append(editableDiv);
 
         // Add a cancel button
         let cancelButton = document.createElement("input");
@@ -134,8 +164,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
             receiveMedications(sendResponse);
         });
         content.appendChild(extractionButton);
-        
+
         return true;
     }
-	
 });

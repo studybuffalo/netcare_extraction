@@ -28,12 +28,27 @@
 
     #netcare_extraction_instructions ul {
         padding-left: 25px;
+        list-style: disc;
     }
 
-#netcare_extraction_textarea {
+    #netcare_extraction_instructions li {
+        list-style: disc;
+    }
+
+#netcare_extraction_errors {
+    color: red;
+    min-height: 25px;
+}
+
+#netcare_extraction_div {
+    background-color: rgb(255, 255, 255);
+    border: 1px solid gray;
     display: block;
     height: 300px;
-    margin: 10px 0;
+    overflow-y: auto;
+    overflow-x: scroll;
+    padding: 2px;
     resize: none;
     width: 100%;
+    max-width: 600px;
 }
