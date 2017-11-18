@@ -1,13 +1,21 @@
 var browser = browser || chrome;
 console.log("extraction.js loaded");
 
-function createLi(txt) {
-    let li = document.createElement("li");
-    li.appendChild(document.createTextNode(txt));
+function checkForEndOfReport(table) {
+    let returnValue = false;
 
-    return li;
+    let td = table.getElementsByTagName("td");
+
+    if (td.length) {
+        tdText = td[0].innerText.trim().toUpperCase();
+
+        if (tdText === "- END OF REPORT -") {
+            returnValue = true;
+        }
+    }
+
+    return returnValue
 }
-
 /*
     Tracking the code to prescription medications
     <table>
@@ -123,17 +131,110 @@ function createLi(txt) {
     </table>
     <table></table>     END OF REPORT - NOT NEEDED
 */
+
+function extractMedications(data) {
+    // Get all the direct child tables
+    let dataChildren = data.children;
+
+    let tables = [];
+    
+    for (child of dataChildren) {
+        if (child.tagName === "TABLE") {
+            tables.push(child);
+        }
+    }
+
+    // Last table in the data contains the medications
+    let table = tables[tables.length - 1];
+    
+    // Get the direct body element
+    let tableChildren = table.children;
+
+    let tbody;
+
+    for (child of tableChildren) {
+        if (child.tagName === "TBODY") {
+            tbody = child;
+        }
+    }
+
+    // Collect all the direct rows of tbody (these contain the data)
+    tbodyChildren = tbody.children;
+
+    let rows = [];
+
+    for (child of tbodyChildren) {
+        if (child.tagName === "TR") {
+            rows.push(child);
+        }
+    }
+    
+    for (row of rows) {
+        console.log(row);
+    }
+    
+}
+
 function receiveMedications(sendResponse) {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_div");
 
     // Check if the require content is present, otherwise display warning
-    let validation = false;
-    let tables = medications.getElementsByTagName("table");
-    console.log(tables.length);
+    let validation = true;
+    let errorMessage = "";
 
-    for (table of tables) {
-        console.log(table.innerHTML);
+    // Get all the children of medications
+    let primaryTables = document.querySelectorAll("#netcare_extraction_div > table");
+    
+    // Check how many tables there are (2 is expected)
+    if (primaryTables.length === 2) {
+        // 2 Tables = Content + "End of Report"
+        // Check for end of report tag
+        if (checkForEndOfReport(primaryTables[1]) === false) {
+            validation = false;
+            errorMessage =
+                "Cannot detect end of report - please retry copying and pasting "
+                + "the entire medication profile report";
+        }
+
+        // Extract the tbody of the first table to extract medication data
+        let primaryTableChildren = primaryTables[0].children;
+        
+        let primaryBody;
+        for (child of primaryTableChildren) {
+            if (child.tagName === "TBODY") {
+                primaryBody = child;
+            }
+        }
+
+        // Extract the first table row element
+        let primaryBodyChildren = primaryBody.children;
+        let primaryRow;
+        
+        for (child of primaryBodyChildren) {
+            if (child.tagName === "TR") {
+                primaryRow = child;
+            }
+        }
+
+        // Extract the first table data
+        let primaryRowChildren = primaryRow.children;
+        let primaryCell;
+
+        for (child of primaryRowChildren) {
+            if (child.tagName === "TD") {
+                primaryCell = child;
+            }
+        }
+
+        // Pass the table data and extract medications
+        medications = extractMedications(primaryCell);
+        
+    } else if (primaryTables.length === 1) {
+        // Only "End of Report"
+        validation = false;
+    } else {
+        validation = false;
     }
 
     if (validation) {
@@ -171,6 +272,13 @@ function cancelExtraction(e, sendResponse) {
         // Send the response back to the extension
         sendResponse({ message: medications });
     }
+}
+
+function createLi(txt) {
+    let li = document.createElement("li");
+    li.appendChild(document.createTextNode(txt));
+
+    return li;
 }
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
