@@ -1,5 +1,20 @@
 ﻿var browser = browser || chrome;
 
+function copyResult(msg) {
+    // Create element
+    let responseInput = document.createElement("input");
+    responseInput.type = "text";
+    responseInput.value = msg;
+
+    // Add the element to the body and copy the text
+    document.body.appendChild(responseInput);
+    responseInput.select();
+    document.execCommand("Copy");
+
+    // Remove the element
+    document.body.removeChild(responseInput);
+}
+
 function checkForEndOfReport(table) {
     let returnValue = false;
 
@@ -355,7 +370,7 @@ function extractMedicationData(rows) {
     return JSON.stringify(medicationData);
 }
 
-function receiveMedications(sendResponse) {
+function processMedicationExtraction() {
     // Get the medication content
     let medications = document.getElementById("netcare_extraction_div");
 
@@ -401,9 +416,6 @@ function receiveMedications(sendResponse) {
         // Remove the veil
         let veil = document.getElementById("netcare_extraction_veil");
         document.body.removeChild(veil);
-
-        // Send the response back to the extension
-        sendResponse({ message: medicationData });
     } else {
         // Clear the editableDiv
         medications.innerHTML = "";
@@ -413,7 +425,7 @@ function receiveMedications(sendResponse) {
     }
 }
 
-function cancelExtraction(e, sendResponse) {
+function cancelExtraction(e) {
     // Get the veil and cancel button
     let veil = document.getElementById("netcare_extraction_veil");
     let container = document.getElementById("netcare_extraction_container");
@@ -423,9 +435,6 @@ function cancelExtraction(e, sendResponse) {
     if (e.target === veil || e.target === cancel || e.target === container) {
         // Remove the veil
         document.body.removeChild(veil);
-
-        // Send the response back to the extension
-        sendResponse({ message: medications });
     }
 }
 
@@ -462,7 +471,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
         let veil = document.createElement("div");
         veil.id = "netcare_extraction_veil";
         veil.addEventListener("click", function (e) {
-            cancelExtraction(e, sendResponse);
+            cancelExtraction(e);
         });
         body.appendChild(veil);
 
@@ -525,7 +534,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
         cancelButton.id = "netcare_extraction_cancel";
         cancelButton.value = "Cancel";
         cancelButton.addEventListener("click", function (e) {
-            cancelExtraction(e, sendResponse);
+            cancelExtraction(e);
         });
         content.append(cancelButton);
 
@@ -534,7 +543,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
         extractionButton.type = "button";
         extractionButton.value = "Extract medications";
         extractionButton.addEventListener("click", function () {
-            receiveMedications(sendResponse);
+            processMedicationExtraction();
         });
         content.appendChild(extractionButton);
 
